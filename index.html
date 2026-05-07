@@ -3,157 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Eksperimen perbandingan performa JavaScript vs WebAssembly — benchmark CPU-heavy menggunakan factorial, fibonacci, dan heavy math loop." />
-  <title>JS vs WebAssembly — Benchmark Performa</title>
+  <meta name="description" content="Eksperimen perbandingan performa JavaScript vs WebAssembly — benchmark CPU-heavy di browser." />
+  <title>JS vs WebAssembly — Benchmark</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<div class="container">
-
-  <!-- ══ HEADER ═══════════════════════════════════════════════════ -->
-  <header class="header">
-    <div class="header-badge">
-      <span></span> Performance Experiment
+<!-- ══ TOP BAR ════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-badge">
+      <span class="pulse-dot"></span>
+      Performance Experiment
     </div>
     <h1>
       <span class="tag-js">JavaScript</span>
-      vs
+      <span class="vs">vs</span>
       <span class="tag-wasm">WebAssembly</span>
     </h1>
-    <p class="header-desc">
-      Benchmark CPU-heavy secara langsung di browser menggunakan
-      <code>performance.now()</code>. Ukur selisih nyata antara
-      JS engine dan modul WASM hasil kompilasi C.
-    </p>
-  </header>
+  </div>
 
-  <hr class="divider" />
+  <div class="topbar-center">
+    <!-- Config: Jenis Benchmark -->
+    <div class="config-item">
+      <label for="benchmark-select">Benchmark</label>
+      <select id="benchmark-select">
+        <option value="factorial">Factorial</option>
+        <option value="fibonacci" selected>Fibonacci</option>
+        <option value="math_loop">Heavy Math</option>
+      </select>
+    </div>
 
-  <!-- ══ KONFIGURASI ══════════════════════════════════════════════ -->
-  <p class="section-label">Konfigurasi</p>
-  <div class="config-card">
-    <div class="config-row">
-
-      <!-- Pilih jenis benchmark -->
-      <div class="config-item">
-        <label for="benchmark-select">Jenis Benchmark</label>
-        <select id="benchmark-select" aria-label="Pilih jenis benchmark">
-          <option value="factorial">Factorial (iteratif)</option>
-          <option value="fibonacci" selected>Fibonacci (iteratif)</option>
-          <option value="math_loop">Heavy Math Loop</option>
-        </select>
-      </div>
-
-      <!-- Pilih intensitas -->
-      <div class="config-item">
-        <label for="intensity-select">Intensitas</label>
-        <select id="intensity-select" aria-label="Pilih intensitas benchmark">
-          <!-- Diisi oleh script.js berdasarkan benchmark yang dipilih -->
-        </select>
-      </div>
-
+    <!-- Config: Intensitas -->
+    <div class="config-item">
+      <label for="intensity-select">Intensitas</label>
+      <select id="intensity-select"></select>
     </div>
   </div>
 
-  <!-- ══ TOMBOL KONTROL ══════════════════════════════════════════ -->
-  <p class="section-label">Kontrol</p>
-  <div class="btn-row" style="margin-bottom: 28px;">
-
-    <!-- Tombol run JS -->
-    <button id="btn-run-js" class="btn btn-js" aria-label="Jalankan benchmark JavaScript">
-      <!-- Ikon JS sederhana -->
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M5 10V7.5c0-.3-.2-.5-.5-.5H4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <path d="M7.5 10c.8 0 1.5-.4 1.5-1.2 0-.7-.6-1-1.5-1.3-.5-.2-.5-.5-.5-.5s0-.5.5-.5.5.5.5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>
-      Run JavaScript
+  <div class="topbar-right">
+    <button id="btn-run-js" class="btn btn-js">
+      ▶ Run JS
     </button>
-
-    <!-- Tombol run WASM -->
-    <button id="btn-run-wasm" class="btn btn-wasm" disabled aria-label="Jalankan benchmark WebAssembly">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M2 11L5 3l2 5 2-3 3 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Run WebAssembly
-      <span id="wasm-status" style="font-size:10px;opacity:0.7;font-family:var(--font-mono);">Memuat…</span>
+    <button id="btn-run-wasm" class="btn btn-wasm" disabled>
+      ▶ Run WASM
+      <span id="wasm-status" class="wasm-pill">Memuat…</span>
     </button>
-
-    <!-- Tombol run keduanya sekaligus -->
-    <button id="btn-run-all" class="btn btn-all" disabled aria-label="Jalankan kedua benchmark">
-      ▶ Run All
+    <button id="btn-run-all" class="btn btn-all" disabled>
+      ▶▶ Run All
     </button>
-
-    <!-- Tombol reset -->
-    <button id="btn-reset" class="btn btn-reset" aria-label="Reset semua hasil">
-      ↺ Reset
-    </button>
+    <button id="btn-reset" class="btn btn-reset">↺</button>
   </div>
+</header>
 
-  <!-- ══ KARTU HASIL ══════════════════════════════════════════════ -->
-  <p class="section-label">Hasil Benchmark</p>
-  <div class="result-grid">
+<!-- ══ MAIN PANELS ════════════════════════════════════════════════ -->
+<main class="panels">
 
-    <!-- Kartu JavaScript -->
-    <div class="result-card" id="js-card" role="region" aria-label="Hasil JavaScript">
-      <div class="result-card-header">
-        <div class="result-card-title">
-          <span class="dot dot-js"></span> JavaScript
-        </div>
-        <span class="winner-badge" aria-label="Pemenang">Winner</span>
-      </div>
-
-      <div class="result-time" id="js-time">—</div>
-      <div class="result-meta" id="js-meta"></div>
-
-      <div class="progress-bar-wrap">
-        <div class="progress-bar" id="js-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
-      </div>
+  <!-- Panel 1: JavaScript Result -->
+  <div class="panel panel-js" id="js-card" role="region" aria-label="Hasil JavaScript">
+    <div class="panel-header">
+      <span class="dot dot-js"></span>
+      <span class="panel-title">JavaScript</span>
+      <span class="winner-badge" id="js-winner">Winner</span>
     </div>
-
-    <!-- Kartu WebAssembly -->
-    <div class="result-card" id="wasm-card" role="region" aria-label="Hasil WebAssembly">
-      <div class="result-card-header">
-        <div class="result-card-title">
-          <span class="dot dot-wasm"></span> WebAssembly
-        </div>
-        <span class="winner-badge" aria-label="Pemenang">Winner</span>
-      </div>
-
-      <div class="result-time" id="wasm-time">—</div>
-      <div class="result-meta" id="wasm-meta"></div>
-
-      <div class="progress-bar-wrap">
-        <div class="progress-bar" id="wasm-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ══ KARTU PERBANDINGAN ═══════════════════════════════════════ -->
-  <div class="comparison-card" id="comparison-card" role="region" aria-label="Hasil perbandingan">
-    <div class="comparison-header">Perbandingan</div>
-    <div class="comparison-body" id="comparison-body">
-      <span style="color:var(--text-muted)">Jalankan kedua benchmark untuk melihat perbandingan.</span>
+    <div class="panel-time" id="js-time">—</div>
+    <div class="panel-meta" id="js-meta">Belum dijalankan</div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="js-progress"></div>
     </div>
   </div>
 
-  <!-- ══ LOG CONSOLE ══════════════════════════════════════════════ -->
-  <div class="log-section">
-    <div class="log-header">
-      <p class="section-label" style="margin:0">Log</p>
+  <!-- Panel 2: WebAssembly Result -->
+  <div class="panel panel-wasm" id="wasm-card" role="region" aria-label="Hasil WebAssembly">
+    <div class="panel-header">
+      <span class="dot dot-wasm"></span>
+      <span class="panel-title">WebAssembly</span>
+      <span class="winner-badge" id="wasm-winner">Winner</span>
     </div>
-    <div class="log-area" id="log-area" role="log" aria-live="polite" aria-label="Log eksekusi benchmark"></div>
+    <div class="panel-time" id="wasm-time">—</div>
+    <div class="panel-meta" id="wasm-meta">Belum dijalankan</div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="wasm-progress"></div>
+    </div>
   </div>
 
-  <!-- ══ FOOTER ═══════════════════════════════════════════════════ -->
-  <footer class="footer">
-    <span>JS vs WASM Benchmark · Vanilla HTML/JS</span>
-    <span>performance.now() · Emscripten (emcc)</span>
-  </footer>
+  <!-- Panel 3: Perbandingan -->
+  <div class="panel panel-compare" id="comparison-card" role="region" aria-label="Perbandingan">
+    <div class="panel-header">
+      <span class="panel-title">Perbandingan</span>
+    </div>
+    <div id="comparison-body" class="compare-body">
+      <span class="muted">Jalankan kedua benchmark terlebih dahulu.</span>
+    </div>
+  </div>
 
-</div><!-- /container -->
+  <!-- Panel 4: Log -->
+  <div class="panel panel-log">
+    <div class="panel-header">
+      <span class="panel-title">Log</span>
+    </div>
+    <div class="log-area" id="log-area" role="log" aria-live="polite"></div>
+  </div>
+
+</main>
 
 <script src="script.js"></script>
 </body>

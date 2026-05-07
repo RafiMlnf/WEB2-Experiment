@@ -161,20 +161,20 @@ const DOM = {
   btnWasm:         $('btn-run-wasm'),
   btnAll:          $('btn-run-all'),
   btnReset:        $('btn-reset'),
-  // JS result card
+  // JS result panel
   jsTime:          $('js-time'),
   jsMeta:          $('js-meta'),
   jsProgress:      $('js-progress'),
   jsCard:          $('js-card'),
-  // WASM result card
+  // WASM result panel
   wasmTime:        $('wasm-time'),
   wasmMeta:        $('wasm-meta'),
   wasmProgress:    $('wasm-progress'),
   wasmCard:        $('wasm-card'),
-  // Comparison
+  // Comparison panel
   compCard:        $('comparison-card'),
   compBody:        $('comparison-body'),
-  // Log
+  // Log panel
   logArea:         $('log-area'),
   wasmStatus:      $('wasm-status'),
 };
@@ -446,11 +446,9 @@ function setLoading(which, loading) {
 function updateCard(which, fmt, paramLabel, elapsedMs) {
   const timeEl = which === 'js' ? DOM.jsTime : DOM.wasmTime;
   const metaEl = which === 'js' ? DOM.jsMeta : DOM.wasmMeta;
-  const card   = which === 'js' ? DOM.jsCard : DOM.wasmCard;
 
   timeEl.innerHTML = `${fmt.value}<span class="unit">${fmt.unit}</span>`;
   metaEl.textContent = `${paramLabel} | ${elapsedMs.toFixed(3)} ms`;
-  card.classList.add('has-result');
 }
 
 /**
@@ -472,9 +470,8 @@ function updateComparison() {
     : (wasmMs / jsMs).toFixed(2);
   const speedClass = faster === 'wasm' ? 'faster-wasm' : 'faster-js';
   const winner     = faster === 'wasm' ? 'WebAssembly' : 'JavaScript';
-  const loser      = faster === 'wasm' ? 'JavaScript' : 'WebAssembly';
 
-  // Tandai kartu pemenang
+  // Tandai panel pemenang
   DOM.jsCard.classList.toggle('is-winner',   faster === 'js');
   DOM.wasmCard.classList.toggle('is-winner', faster === 'wasm');
 
@@ -486,16 +483,17 @@ function updateComparison() {
   DOM.compBody.innerHTML = `
     <div class="speedup-row">
       <span class="speedup-number ${speedClass}">${ratio}×</span>
-      <span class="speedup-label">${winner} lebih cepat</span>
+      <span class="speedup-label">${winner}<br>lebih cepat</span>
     </div>
-    <div class="comparison-detail">
-      JS: ${jsMs.toFixed(3)}ms &nbsp;|&nbsp; WASM: ${wasmMs.toFixed(3)}ms
-      &nbsp;|&nbsp; selisih: ${Math.abs(jsMs - wasmMs).toFixed(3)}ms
+    <div class="compare-detail">
+      JS &nbsp;&nbsp;: ${jsMs.toFixed(3)} ms<br>
+      WASM : ${wasmMs.toFixed(3)} ms<br>
+      Selisih : ${Math.abs(jsMs - wasmMs).toFixed(3)} ms
     </div>
-    <div class="comparison-detail" style="margin-top:4px;color:var(--text-muted)">
+    <div class="compare-detail" style="margin-top:8px">
       ${faster === 'wasm'
-        ? '↳ WASM unggul karena pre-compiled binary + static typing + zero GC overhead.'
-        : '↳ JS menang — mungkin karena JIT sudah mengoptimalkan fungsi ini, atau beban terlalu ringan.'}
+        ? '↳ WASM unggul: pre-compiled binary,\nstatic typing, no GC overhead.'
+        : '↳ JS menang: JIT sudah mengoptimalkan\nfungsi ini, atau beban terlalu ringan.'}
     </div>
   `;
 }
@@ -507,16 +505,14 @@ function resetAll() {
   state.jsTime   = null;
   state.wasmTime = null;
 
-  DOM.jsTime.innerHTML   = '—';
-  DOM.jsMeta.textContent = '';
-  DOM.wasmTime.innerHTML = '—';
-  DOM.wasmMeta.textContent = '';
+  DOM.jsTime.innerHTML     = '—';
+  DOM.jsMeta.textContent   = 'Belum dijalankan';
+  DOM.wasmTime.innerHTML   = '—';
+  DOM.wasmMeta.textContent = 'Belum dijalankan';
 
-  DOM.jsCard.classList.remove('has-result', 'is-winner');
-  DOM.wasmCard.classList.remove('has-result', 'is-winner');
-  DOM.compCard.classList.remove('ready');
-  DOM.compBody.classList.remove('has-data');
-  DOM.compBody.innerHTML = '<span style="color:var(--text-muted)">Jalankan kedua benchmark untuk melihat perbandingan.</span>';
+  DOM.jsCard.classList.remove('is-winner');
+  DOM.wasmCard.classList.remove('is-winner');
+  DOM.compBody.innerHTML = '<span class="muted">Jalankan kedua benchmark terlebih dahulu.</span>';
 
   DOM.jsProgress.style.width   = '0%';
   DOM.wasmProgress.style.width = '0%';
