@@ -129,7 +129,7 @@ Refresh browser — status WASM berubah dari `⚠ Demo` menjadi `✓ Ready`.
 
 ## Contoh Hasil Benchmark
 
-*(Diuji di Chrome 124, Intel Core i7-10th gen, Windows 11)*
+*(Diuji di Chrome, AMD Ryzen 5 2600, Windows 11)*
 
 ### Heavy Math Loop — 5 juta iterasi
 
